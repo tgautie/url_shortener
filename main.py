@@ -8,7 +8,7 @@ import hashlib
 app = FastAPI(
     title="URL Shortener API",
     description="A simple URL shortening service",
-    version="1.0.0"
+    version="1.0.1"
 )
 
 # In-memory storage
