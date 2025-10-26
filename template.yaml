@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: URL Shortener API using FastAPI and Lambda
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 256
+    Runtime: python3.11
+
+Resources:
+  URLShortenerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: main.handler
+      Events:
+        Root:
+          Type: Api
+          Properties:
+            Path: /
+            Method: GET
+        EncodeURL:
+          Type: Api
+          Properties:
+            Path: /encode
+            Method: POST
+        GetURL:
+          Type: Api
+          Properties:
+            Path: /{short_code}
+            Method: GET
+
+Outputs:
+  URLShortenerApi:
+    Description: "API Gateway endpoint URL for URL Shortener"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  URLShortenerFunction:
+    Description: "URL Shortener Lambda Function ARN"
+    Value: !GetAtt URLShortenerFunction.Arn
+  URLShortenerFunctionIamRole:
+    Description: "Implicit IAM Role created for URL Shortener function"
+    Value: !GetAtt URLShortenerFunctionRole.Arn
