@@ -12,7 +12,8 @@ app = FastAPI(
 )
 
 # In-memory storage
-url_store: Dict[str, str] = {}
+url_store: Dict[str, str] = {}  # Maps short_code -> original_url
+url_to_code: Dict[str, str] = {}  # Reverse lookup: original_url -> short_code
 
 
 class URLEncodeRequest(BaseModel):
@@ -58,14 +59,14 @@ async def encode_url(request: URLEncodeRequest) -> URLEncodeResponse:
     """
     url_str = str(request.url)
 
-    # Check if URL already exists in store
-    for short_code, stored_url in url_store.items():
-        if stored_url == url_str:
-            return URLEncodeResponse(
-                short_code=short_code,
-                short_url=f"/{short_code}",
-                original_url=url_str
-            )
+    # Check if URL already exists in store using O(1) lookup
+    if url_str in url_to_code:
+        short_code = url_to_code[url_str]
+        return URLEncodeResponse(
+            short_code=short_code,
+            short_url=f"/{short_code}",
+            original_url=url_str
+        )
 
     # Generate new short code
     short_code = generate_short_code(url_str)
@@ -77,8 +78,9 @@ async def encode_url(request: URLEncodeRequest) -> URLEncodeResponse:
         counter += 1
         short_code = f"{original_short_code}{counter}"
 
-    # Store the mapping
+    # Store the mapping in both dictionaries
     url_store[short_code] = url_str
+    url_to_code[url_str] = short_code
 
     return URLEncodeResponse(
         short_code=short_code,
